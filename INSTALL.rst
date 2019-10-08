@@ -1,49 +1,49 @@
 ==================
-Installing Numexpr
+安装 Numexpr
 ==================
 
-These are instructions for installing Numexpr on Unix systems.  For
-Windows, it is best to install it from binaries.  However, you should
-note that, for the time being, we cannot provide Windows binaries with
-MKL support.
+在 Unix 系统上安装 Numexpr 要知道一些指令。
+对于 Windows 系统来说，最好就是从二进制文件来安装。
+不管如何做到的，你应该注意，项目正在进行中，
+我们不能提供含有 MKL 支持的 Windows 二进制安装包。
 
 
-Building
+建造
 ========
 
-This version of `Numexpr` requires Python 2.6 or greater,
-and NumPy 1.6 or greater.
+本 `Numexpr` 版本需要 Python 2.6 以上的版本，
+以及 NumPy 1.6 以上的版本。
 
-It's built in the standard Python way::
+用标准的 Python 方法来建造，命令行中输入::
 
   $ python setup.py build
   $ python setup.py install
 
-You can test `numexpr` with:
+安装完毕，你可以测试一下 `numexpr` 库，命令行中输入::
 
   $ python -c "import numexpr; numexpr.test()"
 
 
-Enabling Intel's MKL support
+开启英特尔公司的 MKL 支持
 ============================
 
-numexpr includes support for Intel's MKL library.  This allows for
-better performance on Intel architectures, mainly when evaluating
-transcendental functions (trigonometrical, exponential...).  It also
-enables numexpr using several CPU cores.
+numexpr 库支持英特尔公司的 MKL 库。这就让你在
+英特尔架构上的性能获得更好效果，主要是在评估超前
+函数上（三角学公式，幂运算，等等多层化数学计算公式）。
+同时也开启了 numexpr 库使用多核 CPU 的利用率。
 
-If you have Intel's MKL, just copy the `site.cfg.example` that comes
-in the distribution to `site.cfg` and edit the latter giving proper
-directions on how to find your MKL libraries in your system.  After
-doing this, you can proceed with the usual building instructions
-listed above.
+如果你的电脑中已经安装了 Intel's MKL 库的话，
+只要复制分发包中的 `site.cfg.example` 文件内容到
+ `site.cfg` 文件中，并且编辑稍后给出的正确指导即可。
+正确指导是关于如何找到你电脑中所安装的 MKL 库的位置。
+完成这些，你可以继续使用上面的常用建造指令来安装了。
 
-Pay attention to the messages during the building process in order to
-know whether MKL has been detected or not.  Finally, you can check the
-speed-ups on your machine by running the `bench/vml_timing.py` script
-(you can play with different parameters to the
-`set_vml_accuracy_mode()` and `set_vml_num_threads()` functions in the
-script so as to see how it would affect performance).
+注意，在建造过程中的消息内容，这样你会知道是否检测到 MKL 库。
+最后，你可以检查你的电脑运算加速效果，
+通过运行 `bench/vml_timing.py` 脚步方式
+（你可以用不同的参数值来与
+`set_vml_accuracy_mode()` 和 `set_vml_num_threads()` 
+函数玩一会儿，在脚本中你会看到有不同的性能效果）。
 
 
 
