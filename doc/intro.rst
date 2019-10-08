@@ -66,26 +66,26 @@ NumExpr 的加速范围尊重 NumPy 库，可以介于 0.95x 和 20x 之间，
 
     In [1]: import numpy as np
     In [2]: import numexpr as ne
-    In [3]: a = np.random.rand(1e6)
-    In [4]: b = np.random.rand(1e6)
+    In [3]: a = np.random.randint(1e6)
+    In [4]: b = np.random.randint(1e6)
     In [5]: timeit 2*a + 3*b
-    10 loops, best of 3: 18.9 ms per loop
+    187 ns ± 3.6 ns per loop (mean ± std. dev. of 7 runs, 10000000 loops each)
     In [6]: timeit ne.evaluate("2*a + 3*b")
-    100 loops, best of 3: 5.83 ms per loop   # 3.2x: medium speed-up (simple expr)
+    18.1 µs ± 288 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
     In [7]: timeit 2*a + b**10
-    10 loops, best of 3: 158 ms per loop
+    677 ns ± 39.6 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
     In [8]: timeit ne.evaluate("2*a + b**10")
-    100 loops, best of 3: 7.59 ms per loop   # 20x: large speed-up due to optimised pow()
+    18.6 µs ± 295 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
 
 不整齐阵列情况，提速甚至更大::
 
-    In [9]: a = np.empty(1e6, dtype="b1,f8")['f1']
-    In [10]: b = np.empty(1e6, dtype="b1,f8")['f1']
+    In [9]: a = np.empty(int(1e6), dtype="b1,f8")['f1']
+    In [10]: b = np.empty(int(1e6), dtype="b1,f8")['f1']
     In [11]: a.flags.aligned, b.flags.aligned
     Out[11]: (False, False)
     In [12]: a[:] = np.random.rand(len(a))
     In [13]: b[:] = np.random.rand(len(b))
     In [14]: timeit 2*a + 3*b
-    10 loops, best of 3: 29.5 ms per loop
+    7.26 ms ± 63.2 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)
     In [15]: timeit ne.evaluate("2*a + 3*b")
-    100 loops, best of 3: 7.46 ms per loop   # ~ 4x speed-up
+    2.91 ms ± 34.3 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)
