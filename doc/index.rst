@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-NumExpr Documentation Reference
+NumExpr 文档指南
 =================================
 
 Contents:

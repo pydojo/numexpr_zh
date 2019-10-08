@@ -1,40 +1,40 @@
-How it works
+NumExpr 是如何工作的？
 ============
 
-The string passed to :code:`evaluate` is compiled into an object representing the 
-expression and types of the arrays used by the function :code:`numexpr`.
+把字符串代入到 :code:`evaluate` 里编译成一个对象来表示表达式，
+然后阵列的类型通过 :code:`numexpr` 函数来使用。
 
-The expression is first compiled using Python's :code:`compile` function (this means 
-that the expressions have to be valid Python expressions). From this, the 
-variable names can be taken. The expression is then evaluated using instances 
-of a special object that keep track of what is being done to them, and which 
-builds up the parse tree of the expression.
+使用 Python 的 :code:`compile` 时先编译表达式（这意味着
+表达式要是合法的 Python 表达式）。这样才能得到变量名。然后
+使用一个特殊对象的实例完成表达式评估，这个特殊对象保存了对表达式
+所做的追踪信息，并且对表达式建立了一棵语法分析树。
 
-This parse tree is then compiled to a bytecode program, which describes how to 
-perform the operation element-wise. The virtual machine uses "vector registers": 
-each register is many elements wide (by default 4096 elements). The key to 
-NumExpr's speed is handling chunks of elements at a time.
+然后把这棵语法分析树编译成一个字节编码的程序，该程序描述如何执行
+智能元素操作。虚拟机使用“向量注册器”：
+每个注册器有许多元素宽（默认是 4096 个元素）。
+对于 NumExpr 速度的关键是一次性处理这些元素的皮卡形式。
 
-There are two extremes to evaluating an expression elementwise. You can do each 
-operation as arrays, returning temporary arrays. This is what you do when you 
-use NumPy: :code:`2*a+3*b` uses three temporary arrays as large as :code:`a` or 
-:code:`b`. This strategy wastes memory (a problem if your arrays are large), 
-and also is not a good use of cache memory: for large arrays, the results of 
-:code:`2*a` and :code:`3*b` won't be in cache when you do the add.
+评估一个表达式的智能元素时，有2个极端。
+你可以把每个操作当成阵列来执行，返回临时阵列。
+这就是你使用 NumPy 时所做的：
+:code:`2*a+3*b` 使用了三个临时阵列同规模操作在 :code:`a` 或 :code:`b` 上。
+这种策略导致内存浪费（如果你的阵列太大就有问题），
+并且用不好缓存：对大型阵列来说，
+:code:`2*a` 和 :code:`3*b` 不会在缓存中做加法。
 
-The other extreme is to loop over each element, as in::
+另一个极端就是要迭代每一个元素，如同使用 `for` 循环语句一样::
 
     for i in xrange(len(a)):
         c[i] = 2*a[i] + 3*b[i]
 
-This doesn't consume extra memory, and is good for the cache, but, if the 
-expression is not compiled to machine code, you will have a big case statement 
-(or a bunch of if's) inside the loop, which adds a large overhead for each 
-element, and will hurt the branch-prediction used on the CPU.
+这不会消耗额外的内存，并且用好了缓存，但是
+如果表达式没有编译成机器代码，你会有一个大问题
+（或者一堆问题），那就是在循环内部对每个元素
+增加了大量过量操作，并且会伤害到用在 CPU 上的分支预测语句。
 
-:code:`numexpr` uses a in-between approach. Arrays are handled as chunks (of 
-4096 elements) at a time, using a register machine. As Python code, 
-it looks something like this::
+:code:`numexpr` 使用了平衡术方法。阵列都处理成皮卡
+（4096 个元素一组）一次处理一组，使用了一个注册器机制。
+使用 Python 时代码看起来像下面一样::
 
     for i in xrange(0, len(a), 256):
        r0 = a[i:i+128]
@@ -44,29 +44,25 @@ it looks something like this::
        add(r2, r3, r2)
        c[i:i+128] = r2
 
-(remember that the 3-arg form stores the result in the third argument, 
-instead of allocating a new array). This achieves a good balance between 
-cache and branch-prediction. And the virtual machine is written entirely in 
-C, which makes it faster than the Python above.  Furthermore the virtual machine 
-is also multi-threaded, which allows for efficient parallelization of NumPy 
-operations.
+（记住，三段式把结果存储在第三个参数中，而不是分配一个新阵列）。
+这种实现在缓存和分支预测之间得到了良好地平衡。
+并且虚拟机是完全用 C 语言写的，这让上面的 Python 代码运行的更快了。
+进一步来说，虚拟机也是多线程的，所以让 NumPy 的平行计算有了效率。
 
-There is some more information and history at:
+更多信息和历史记录在如下地址中：
 
 http://www.bitsofbits.com/2014/09/21/numpy-micro-optimization-and-numexpr/
 
-Expected performance
+期望的性能
 ====================
 
-The range of speed-ups for NumExpr respect to NumPy can vary from 0.95x and 20x, 
-being 2x, 3x or 4x typical values, depending on the complexity of the 
-expression and the internal optimization of the operators used. The strided and 
-unaligned case has been optimized too, so if the expression contains such 
-arrays, the speed-up can increase significantly. Of course, you will need to 
-operate with large arrays (typically larger than the cache size of your CPU) 
-to see these improvements in performance.
+NumExpr 的加速范围尊重 NumPy 库，可以介于 0.95x 和 20x 之间，
+典型情况是 2x, 3x 或 4x ，与表达式的多层化程度和操作符使用的内部优化有关。
+在阵列出现步幅和不整齐的情况中，也已经优化完成，所以如果表达式含有这类阵列，
+加速可以有足够的提升。当然，你会需要与大型阵列一起操作（典型来说，一个阵列
+大于你的 CPU 缓存大小）才能明白性能提升的意义。
 
-Here there are some real timings. For the contiguous case::
+这里又许多实时例子，连续阵列情况::
 
     In [1]: import numpy as np
     In [2]: import numexpr as ne
@@ -81,7 +77,7 @@ Here there are some real timings. For the contiguous case::
     In [8]: timeit ne.evaluate("2*a + b**10")
     100 loops, best of 3: 7.59 ms per loop   # 20x: large speed-up due to optimised pow()
 
-For unaligned arrays, the speed-ups can be even larger::
+不整齐阵列情况，提速甚至更大::
 
     In [9]: a = np.empty(1e6, dtype="b1,f8")['f1']
     In [10]: b = np.empty(1e6, dtype="b1,f8")['f1']
